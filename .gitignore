@@ -1,0 +1,30 @@
+# Ignore build outputs
+build/
+*.exe
+*.obj
+*.lib
+*.pdb
+*.old
+*.pyd
+*.zip
+
+# Ignore Python bytecode
+__pycache__/
+*.pyc
+
+# Ignore user-specific config
+*.user
+*.suo
+*.VC.db
+*.VC.VC.opendb
+
+#CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+#
+examples/old
+dll
+wheel/

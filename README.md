@@ -26,6 +26,38 @@ pip install https://github.com/m2w4/robodbg/releases/download/v0.0.1/py_robodbg-
 To get you started with a tutorial, go to docs/tutorial.md.
 The doxygen documentation is available at <a href="https://www.robodbg.com">robodbg.com</a>.
 
+### Usage
+
+```py
+from robodbg.x86 import Debugger, BreakpointAction, Register32, DRReg, AccessType, BreakpointLength
+
+class MyDebugger(Debugger):
+    def onStart(self, imageBase, entryPoint):
+        self.setBreakpoint(0x00401000)
+        
+    def onBreakpoint(self, address, hThread):
+        print(f"[onBreakpoint] Breakpoint hit at {hex(address)}")
+        return BreakpointAction.BREAK
+```
+
+```cpp
+#include <stdio.h>
+#include <iostream>
+#include <robodbg/debugger.h>
+
+using namespace RoboDBG;
+class MyDebugger : public Debugger {
+public:
+    virtual void onStart( uintptr_t imageBase, uintptr_t entryPoint ) {
+        setBreakpoint(0x00401000);
+    }
+
+    virtual BreakpointAction onBreakpoint(uintptr_t address, HANDLE hThread) {
+        std::cout << "[*] Breakpoint hit at: 0x" << std::hex << address << std::endl;
+    }
+};
+```
+
 ### Examples (Python)
 
 [Debugger Template](examples/template.py)

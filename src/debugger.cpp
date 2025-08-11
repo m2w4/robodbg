@@ -43,11 +43,11 @@ bool Debugger::hideDebugger( ) {
 }
 
 uintptr_t Debugger::ASLR(LPVOID address) {
-    return imageBase + reinterpret_cast<uintptr_t>(address);
+    return baseImageBase + reinterpret_cast<uintptr_t>(address);
 }
 
 uintptr_t Debugger::ASLR(uintptr_t address) {
-    return imageBase + address;
+    return baseImageBase + address;
 }
 
 // Attach to an existing process
@@ -87,7 +87,7 @@ int Debugger::startProcess(std::string exeName) {
     STARTUPINFO si = { sizeof(si) };
     PROCESS_INFORMATION pi;
 
-    if (!CreateProcess(
+    if (!CreateProcessA(
         NULL,
         const_cast<LPSTR>(exeName.c_str()),
                        NULL,
@@ -243,9 +243,9 @@ int Debugger::loop() {
 
         switch (dbgEvent.dwDebugEventCode) {
             case CREATE_PROCESS_DEBUG_EVENT: {
-                imageBase = reinterpret_cast<uintptr_t>(dbgEvent.u.CreateProcessInfo.lpBaseOfImage);
-                DWORD_PTR entryPoint = Util::getEntryPoint(hProcessGlobal, reinterpret_cast<LPVOID>(imageBase));
-                onStart(imageBase,static_cast<uintptr_t>(entryPoint));
+                baseImageBase = reinterpret_cast<uintptr_t>(dbgEvent.u.CreateProcessInfo.lpBaseOfImage);
+                DWORD_PTR entryPoint = Util::getEntryPoint(hProcessGlobal, reinterpret_cast<LPVOID>(baseImageBase));
+                onStart(baseImageBase,static_cast<uintptr_t>(entryPoint));
                 break;
             }
 

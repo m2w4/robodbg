@@ -28,8 +28,10 @@ The doxygen documentation is available at <a href="https://www.robodbg.com">robo
 
 ### Usage
 
+**Python**
+
 ```py
-from robodbg.x86 import Debugger, BreakpointAction, Register32, DRReg, AccessType, BreakpointLength
+from robodbg.x86 import Debugger, BreakpointAction
 
 class MyDebugger(Debugger):
     def onStart(self, imageBase, entryPoint):
@@ -39,6 +41,8 @@ class MyDebugger(Debugger):
         print(f"[onBreakpoint] Breakpoint hit at {hex(address)}")
         return BreakpointAction.BREAK
 ```
+
+**C++**
 
 ```cpp
 #include <stdio.h>

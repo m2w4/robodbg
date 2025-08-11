@@ -43,18 +43,13 @@ void Debugger::onAttach() {
 
 
 BreakpointAction Debugger::onBreakpoint(uintptr_t address, HANDLE hThread) {
-    std::cout << "[*] Breakpoint hit at: 0x" << std::hex << (DWORD_PTR)address << std::endl;
+    std::cout << "[*] Breakpoint hit at: 0x" << std::hex << address << std::endl;
     return RESTORE;
 }
 
 bool Debugger::onDLLLoad(uintptr_t address, std::string dllName, uintptr_t entryPoint) {
     if(!this->verbose) return false;
-    std::cout << "[*] DLL load at hit at: 0x" << std::hex << (DWORD_PTR)address << std::endl;
-    uint8_t buf[8];
-    //ReadTargetMemory(hProcessGlobal, (LPVOID)0x00401000, &buf, 8 );
-    //for(int i=0;i<8;++i)
-    //    printf("%02x:",buf[i]);
-    //printf("\n");
+    std::cout << "[*] DLL load at hit at: 0x" << std::hex << address << std::endl;
     return false;
 }
 
@@ -108,7 +103,7 @@ void Debugger::onUnknownException( uintptr_t addr, DWORD code )
 {
     if(!this->verbose) return;
     std::cout << "[*] Unknown exception 0x" << std::hex << code
-    << " at 0x" << (DWORD_PTR)addr << "\n";
+    << " at 0x" << addr << "\n";
 }
 
 void Debugger::onUnknownDebugEvent( DWORD code )

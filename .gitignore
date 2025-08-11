@@ -28,3 +28,4 @@ Makefile
 examples/old
 dll
 wheel/
+docs/html

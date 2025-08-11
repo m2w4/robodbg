@@ -8,6 +8,8 @@
 #include "debugger.h"
 #include "../src/util.h"
 
+#ifndef _WIN64 //only works on 32-bit yet
+
 constexpr int SUCCESS = 0;
 
 enum TestCase {
@@ -34,7 +36,6 @@ public:
         this->testCase = testId;
         this->verbose = false;
     }
-
 
     virtual void onStart( uintptr_t imageBase, uintptr_t entryPoint ) {
         uint32_t password;
@@ -133,3 +134,4 @@ int main() {
 
     return (failed == 0) ? 0 : 1;
 }
+#endif

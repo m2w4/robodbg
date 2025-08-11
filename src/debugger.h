@@ -191,9 +191,9 @@ protected:
     uintptr_t baseAddressOffset = 0; // TODO: Add a base image address, e.g: 0x00400000U
 
 #ifdef __WIN64
-    uintptr_t imageBase = 0x0000000140000000ULL; ///< Typical image base (with ASLR).
+    uintptr_t baseImageBase = 0x0000000140000000ULL; ///< Typical image base (with ASLR).
 #else
-    uintptr_t imageBase = 0x00400000U;           ///< Typical image base (with ASLR).
+    uintptr_t baseImageBase = 0x00400000U;           ///< Typical image base (with ASLR).
 #endif
     std::map<LPVOID, BYTE> breakpoints;
     std::map<LPVOID, hwBp_t> hwBreakpoints;

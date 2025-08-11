@@ -3,24 +3,8 @@
  * @brief Various high-level Utility functions.
  **/
 
-#ifndef HELPER_H
-#define HELPER_H
-
-#include <windows.h>
-#include <string>
-#include <vector>
-#include <tlhelp32.h>
-#include <iostream>
-#include <iomanip>
-#include <sstream>
-#include <unordered_map>
-#include <windows.h>
-#include <tchar.h>
-#include <stdio.h>
-#include <psapi.h>
-#include <map>
-#include <fstream>
-#include <iomanip>
+#ifndef UTIL_H
+#define UTIL_H
 
 #include "debugger.h"
 

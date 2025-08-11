@@ -182,7 +182,7 @@ private:
 
     bool dbgLoop = true;
 
-    // internal callbacks
+    // internal callbacks. Arent used right now / not implemented.
     void onPreStart();
     void onPreAttach();
 
@@ -728,6 +728,14 @@ public:
      * @return 0 on success; non-zero on failure.
      */
     int startProcess(std::string exeName);
+
+    /**
+     * @brief Starts a process under debugging with arguments.
+     * @param exeName Path to the executable.
+     * @param args for the debugged application.
+     * @return 0 on success; non-zero on failure.
+     */
+    int startProcess(std::string exeName, const std::vector<std::string>& args);
 
     /**
      * @brief Attaches to a running process by name.

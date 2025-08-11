@@ -107,6 +107,41 @@ int Debugger::startProcess(std::string exeName) {
     return 0;
 }
 
+int Debugger::startProcess(std::string exeName, const std::vector<std::string>& args) {
+    STARTUPINFO si = { sizeof(si) };
+    PROCESS_INFORMATION pi{};
+
+    // Build the full command line
+    std::string cmdLine = "\"" + exeName + "\""; // quote exe path in case it has spaces
+    for (const auto& arg : args) {
+        cmdLine += " " + arg;
+    }
+
+    // CreateProcess requires a modifiable LPSTR
+    std::vector<char> cmdLineMutable(cmdLine.begin(), cmdLine.end());
+    cmdLineMutable.push_back('\0');
+
+    if (!CreateProcessA(
+        nullptr,
+        cmdLineMutable.data(),
+                        nullptr,
+                        nullptr,
+                        FALSE,
+                        DEBUG_ONLY_THIS_PROCESS,
+                        nullptr,
+                        nullptr,
+                        &si,
+                        &pi
+    )) {
+        std::cerr << "CreateProcess failed: " << GetLastError() << std::endl;
+        return -1;
+    }
+
+    hProcessGlobal = pi.hProcess;
+    hThreadGlobal  = pi.hThread;
+    return 0;
+}
+
 
 
 void Debugger::enableSingleStep(HANDLE hThread) {

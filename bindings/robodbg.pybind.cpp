@@ -194,9 +194,6 @@ public:
         return  reinterpret_cast<uintptr_t>(this->getProcessHandle( ));
     }
 
-    // Python wrapper methods for register functions
-    // Add these to your PyDebugger class
-
     #ifdef _WIN64
     // 64-bit register wrapper functions
     bool pyGetFlag(HANDLE hThread, RoboDBG::Flags64 flag) {
@@ -353,8 +350,11 @@ PYBIND11_MODULE(dbg, m) {
     .def(py::init<>())
     .def(py::init<bool>())
     .def("loop", &RoboDBG::Debugger::loop)
-    .def("startProcess", &RoboDBG::Debugger::startProcess)
-    .def("detachFromProcess", &RoboDBG::Debugger::detachFromProcess)
+    .def("startProcess",
+         static_cast<int (RoboDBG::Debugger::*)(std::string)>( &RoboDBG::Debugger::startProcess), py::arg("exe_name")
+    ).def("startProcess",
+         static_cast<int (RoboDBG::Debugger::*)(std::string, const std::vector<std::string>&)>(&RoboDBG::Debugger::startProcess), py::arg("exe_name"), py::arg("args")
+    ).def("detachFromProcess", &RoboDBG::Debugger::detachFromProcess)
     .def("attachToProcess", &RoboDBG::Debugger::attachToProcess)
     .def("setBreakpoint", [](RoboDBG::Debugger &self, uintptr_t address) {
         static_cast<PyDebugger &>(self).pySetBreakpoint(address);

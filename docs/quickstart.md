@@ -11,14 +11,14 @@ Install directly from GitHub using `pip`:
 pip install https://github.com/m2w4/robodbg/releases/download/v0.0.1/robodbg_0.0.1.tar.gz
 ```
 
-A doxygen documentation with all protected and private functions is available under <a href="https://www.robodbg.com">robodbg.com</a>.
+A doxygen documentation with all functions is available under <a href="https://www.robodbg.com">robodbg.com</a>.
 
 ## Usage
 
 ### Setting breakpoints
 
 ```py
-from robodbg.x64 import Debugger, BreakpointAction, Register32, DRReg, AccessType, BreakpointLength
+from robodbg.x64 import *
 
 class MyDebugger(Debugger):
     def onStart(self, imageBase, entryPoint):
@@ -65,4 +65,25 @@ self.setRegister(hThread, Register32.EAX)
 
 ```py
 self.setFlag(hThread, Flags64.ZF, True)
+```
+
+### Memory
+
+#### Search in memory
+```py
+hits = self.searchInMemory([0x56, 0x57, 0xFC, 0x8B, 0x54])
+print(f"Found {len(hits)} hits")
+for a in hits[:10]:
+    print(f"  0x{a:08X}")
+```
+
+#### Read Memory
+```py
+hits = self.readMemory(0x00401000, 4) #read 4 Byte
+```
+
+
+#### Write Memory
+```py
+hits = self.writeMemory(0x00401000, "\x90\x90\x90\xCC", 4) #write 4 Byte
 ```

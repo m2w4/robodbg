@@ -15,7 +15,7 @@ build_pybindings = not args.no_pybindings
 # === Directories / Names ===
 root_dir = os.path.abspath(".")
 src_dir = os.path.join(root_dir, "src")
-bindings_dir = os.path.join(src_dir, "bindings")
+bindings_dir = os.path.join(root_dir, "bindings")
 build_dir = os.path.join(root_dir, f"build/{mode}")
 lib_name = "debuglib.lib"
 test_file = os.path.join(root_dir, "test.cpp")
@@ -24,9 +24,9 @@ pybind_module = "dbg.pyd"
 
 # === Compiler Flags ===
 if mode == "debug":
-    common_flags = "/EHsc /Zi /std:c++20 /Od"
+    common_flags = "/EHsc /I{src_dir} /Zi /std:c++20 /Od"
 else:
-    common_flags = "/EHsc /std:c++20 /O2 /DNDEBUG"
+    common_flags = "/EHsc /I{src_dir} /std:c++20 /O2 /DNDEBUG"
 
 # === Include Paths ===
 # Priority: PYBIND11_INCLUDE -> PYBIND11_DIR/include -> extern/pybind11/include

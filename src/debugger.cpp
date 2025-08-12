@@ -2,6 +2,7 @@
 
 namespace RoboDBG {
 
+
 Debugger::Debugger( ) {
     this->verbose = false;
 }
@@ -22,7 +23,7 @@ bool Debugger::hideDebugger( ) {
     );
 
     if (status != 0) {
-        // std::cerr << "[-] NtQueryInformationProcess failed\n";
+        std::cerr << "[-] NtQueryInformationProcess failed\n";
         return false;
     }
 

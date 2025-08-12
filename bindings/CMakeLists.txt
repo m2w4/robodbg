@@ -1,25 +1,38 @@
-# Python extension: name will be 'robodbg' (import robodbg)
-set(ROBO_PY_SRC "${CMAKE_CURRENT_SOURCE_DIR}/robodbg.pybind.cpp")
-if(NOT EXISTS "${ROBO_PY_SRC}")
-  message(FATAL_ERROR "bindings/robodbg.pybind.cpp not found. Adjust path if needed.")
+# ---------- Python bindings (robodbg.pyd) ----------
+if(BUILD_PYTHON)
+  # Default: look in top-level /bindings
+  set(BINDINGS_DIR "${CMAKE_SOURCE_DIR}/bindings" CACHE PATH "Path to Python bindings directory")
+
+  file(GLOB_RECURSE ROBODBG_BIND_SOURCES CONFIGURE_DEPENDS
+    "${BINDINGS_DIR}/*.cpp" "${BINDINGS_DIR}/*.cc" "${BINDINGS_DIR}/*.cxx"
+  )
+
+  if(NOT ROBODBG_BIND_SOURCES)
+    message(WARNING "No Python binding sources found in ${BINDINGS_DIR}. Disabling BUILD_PYTHON.")
+    set(BUILD_PYTHON OFF)
+  endif()
 endif()
 
-# Use pybind11’s helper
-pybind11_add_module(robodbg_py MODULE "${ROBO_PY_SRC}")
+if(BUILD_PYTHON)
+  if(EXISTS "${CMAKE_SOURCE_DIR}/extern/pybind11/CMakeLists.txt")
+    message(STATUS "Using vendored pybind11 at extern/pybind11")
+    add_subdirectory(extern/pybind11)
+  else()
+    find_package(pybind11 CONFIG REQUIRED)
+  endif()
 
-# Match import name to 'robodbg' (Windows .pyd name)
-set_target_properties(robodbg_py PROPERTIES OUTPUT_NAME "robodbg")
+  pybind11_add_module(robodbg ${ROBODBG_BIND_SOURCES})
 
-target_link_libraries(robodbg_py PRIVATE robodbg)
+  target_link_libraries(robodbg PRIVATE robodbg_core)
+  target_compile_features(robodbg PRIVATE cxx_std_20)
+  target_include_directories(robodbg PRIVATE "${CMAKE_SOURCE_DIR}/src")
 
-target_include_directories(robodbg_py PRIVATE
-  ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_CURRENT_SOURCE_DIR}/../src
-)
-
-# Ensure the module ends up next to the library binaries during build
-set_target_properties(robodbg_py PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/python"
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/python"
-  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/python"
-)
+  set_target_properties(robodbg PROPERTIES
+    PREFIX ""
+    OUTPUT_NAME "robodbg"
+    SUFFIX ".pyd"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/python/$<CONFIG>"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/python/$<CONFIG>"
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/python/$<CONFIG>"
+  )
+endif()

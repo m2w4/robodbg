@@ -1,116 +1,83 @@
-cmake_minimum_required(VERSION 3.23)
+cmake_minimum_required(VERSION 3.20)
 
-project(robodbg
+project(RoboDBG
   VERSION 0.1.0
+  DESCRIPTION "Windows user-mode debugger core + Python bindings"
   LANGUAGES CXX C)
 
-# ---- Options ---------------------------------------------------------------
+# ---------- Options ----------
+option(BUILD_PYTHON "Build Python extension module" ON)
 
-option(BUILD_SHARED_LIBS "Build shared libraries instead of static" OFF)
-option(ROBO_BUILD_PYTHON "Build Python extension (pybind11)" ON)
-# option(ROBO_BUILD_EXAMPLES "Build examples" ON)
-# option(ROBO_BUILD_TESTS "Build tests" ON)
-option(ROBO_BUILD_DOCS "Enable Doxygen docs target" ON)
-
-# ---- Global settings -------------------------------------------------------
-
+# ---------- Global settings ----------
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-# MSVC niceties
+# Output directories (bin/lib) per-config
+foreach(dir RUNTIME LIBRARY ARCHIVE PDB)
+  set(CMAKE_${dir}_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIG>")
+endforeach()
+
+# Windows-specific sane defaults
 if(MSVC)
-  add_compile_options(/W4 /permissive- /Zc:__cplusplus /EHsc)
-  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+  add_compile_options(/W4 /permissive- /Zc:preprocessor /Zc:__cplusplus /EHsc /bigobj)
+  add_compile_definitions(
+    _CRT_SECURE_NO_WARNINGS
+    WIN32_LEAN_AND_MEAN
+    NOMINMAX
+  )
 endif()
 
-# Windows lean headers
-add_compile_definitions(WIN32_LEAN_AND_MEAN NOMINMAX)
-
-# ---- Dependencies ----------------------------------------------------------
-
-# pybind11: prefer submodule at extern/pybind11 but allow system install
-set(ROBO_PYBIND11_FROM_SUBMODULE FALSE)
-if(ROBO_BUILD_PYTHON)
-  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/extern/pybind11/CMakeLists.txt")
-    message(STATUS "Using pybind11 from submodule: extern/pybind11")
-    set(ROBO_PYBIND11_FROM_SUBMODULE TRUE)
-    add_subdirectory(extern/pybind11)
-  else()
-    find_package(pybind11 CONFIG REQUIRED)  # provides pybind11::module
-  endif()
-endif()
-
-# ---- Subdirectories --------------------------------------------------------
-
+# ---------- Core library ----------
 add_subdirectory(src)
 
-if(ROBO_BUILD_PYTHON)
-  add_subdirectory(bindings)
-endif()
-
-# if(ROBO_BUILD_EXAMPLES AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/examples")
-#   add_subdirectory(examples)
-# endif()
-
-#if(ROBO_BUILD_TESTS AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests")
-#  enable_testing()
-#  add_subdirectory(tests)
-#endif()
-
-# ---- Doxygen (optional) ----------------------------------------------------
-
-if(ROBO_BUILD_DOCS)
-  find_package(Doxygen QUIET)
-  if(DOXYGEN_FOUND AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile")
-    add_custom_target(docs
-      COMMAND ${DOXYGEN_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile"
-      WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-      COMMENT "Generating API documentation with Doxygen"
-      VERBATIM)
+# ---------- Python bindings (robodbg.pyd) ----------
+if(BUILD_PYTHON)
+  # Prefer vendored pybind11 if present; fallback to find_package
+  if(EXISTS "${CMAKE_SOURCE_DIR}/extern/pybind11/CMakeLists.txt")
+    message(STATUS "Using vendored pybind11 at extern/pybind11")
+    add_subdirectory(extern/pybind11)
   else()
-    message(STATUS "Doxygen or Doxyfile not found; 'docs' target disabled")
+    find_package(pybind11 CONFIG REQUIRED)
   endif()
+
+  file(GLOB_RECURSE ROBODBG_BIND_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_SOURCE_DIR}/bindings/*.cpp"
+    "${CMAKE_SOURCE_DIR}/bindings/*.cc"
+    "${CMAKE_SOURCE_DIR}/bindings/*.cxx"
+  )
+
+  if(ROBODBG_BIND_SOURCES STREQUAL "")
+    message(FATAL_ERROR "No binding sources found in src/bindings/")
+  endif()
+
+  # Build the Python extension
+  pybind11_add_module(robodbg ${ROBODBG_BIND_SOURCES})
+
+  target_link_libraries(robodbg PRIVATE robodbg_core)
+
+  target_compile_features(robodbg PRIVATE cxx_std_20)
+  target_include_directories(robodbg PRIVATE
+    "${CMAKE_SOURCE_DIR}/src"
+  )
+
+  # Force bare name & correct extension; no SOABI/arch suffixes
+  set_target_properties(robodbg PROPERTIES
+    PREFIX ""                   # no 'lib' prefix
+    OUTPUT_NAME "robodbg"       # exact name
+    SUFFIX ".pyd"               # ensure .pyd on Windows
+    # Put the extension in a predictable folder:
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/python/$<CONFIG>"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/python/$<CONFIG>"
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/python/$<CONFIG>"
+  )
+
+  # If anything needs the file path later, use $<TARGET_FILE:robodbg>
+  add_custom_target(show_robodbg_path ALL
+    COMMAND ${CMAKE_COMMAND} -E echo "robodbg.pyd => $<TARGET_FILE:robodbg>"
+    DEPENDS robodbg
+    VERBATIM
+  )
 endif()
 
-# ---- Install & CMake package export ----------------------------------------
 
-include(GNUInstallDirs)
-
-install(
-  TARGETS robodbg
-  EXPORT robodbgTargets
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
-
-# Public headers (adjust if you later move to include/robodbg/)
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/robodbg
-        FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
-
-# Generate and install a CMake package config
-include(CMakePackageConfigHelpers)
-write_basic_package_version_file(
-  "${CMAKE_CURRENT_BINARY_DIR}/robodbgConfigVersion.cmake"
-  VERSION ${PROJECT_VERSION}
-  COMPATIBILITY SameMajorVersion
-)
-
-configure_file(
-  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/robodbgConfig.cmake.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/robodbgConfig.cmake"
-  @ONLY
-)
-
-install(FILES
-  "${CMAKE_CURRENT_BINARY_DIR}/robodbgConfig.cmake"
-  "${CMAKE_CURRENT_BINARY_DIR}/robodbgConfigVersion.cmake"
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/robodbg
-)
-
-install(EXPORT robodbgTargets
-  NAMESPACE robodbg::
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/robodbg
-)

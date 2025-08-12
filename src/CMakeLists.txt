@@ -1,30 +1,40 @@
-# Library sources. For now we use GLOB to avoid guessing your file list.
-# Replace with explicit lists once stable.
-file(GLOB_RECURSE ROBO_SOURCES CONFIGURE_DEPENDS
-  "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/*.c")
+# Core library collecting all non-binding sources.
 
-file(GLOB_RECURSE ROBO_HEADERS CONFIGURE_DEPENDS
-  "${CMAKE_CURRENT_SOURCE_DIR}/*.h"
-  "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
+# Grab all core sources (exclude bindings/)
+file(GLOB_RECURSE ROBODBG_CORE_SOURCES CONFIGURE_DEPENDS
+  "${CMAKE_SOURCE_DIR}/src/*.cpp"
+  "${CMAKE_SOURCE_DIR}/src/*.cc"
+  "${CMAKE_SOURCE_DIR}/src/*.cxx"
+)
+# Remove binding sources from the core list (they are compiled into the .pyd)
+list(FILTER ROBODBG_CORE_SOURCES EXCLUDE REGEX "/bindings/")
 
-add_library(robodbg ${ROBO_SOURCES} ${ROBO_HEADERS})
+if(ROBODBG_CORE_SOURCES STREQUAL "")
+  message(FATAL_ERROR "No core sources found in src/ (excluding src/bindings).")
+endif()
 
-target_include_directories(robodbg
+add_library(robodbg_core STATIC ${ROBODBG_CORE_SOURCES})
+add_library(RoboDBG::core ALIAS robodbg_core)
+
+target_compile_features(robodbg_core PUBLIC cxx_std_20)
+target_include_directories(robodbg_core
   PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-    $<INSTALL_INTERFACE:include/robodbg>
+    "${CMAKE_SOURCE_DIR}/src"        # public headers live in src/ for now
 )
 
-# Windows libs (present in repo headers like <winternl.h>, Psapi usage, etc.)
-# Link only if available on the platform.
+# Link Windows libs used by the debugger core
 if(WIN32)
-  target_link_libraries(robodbg
+  target_link_libraries(robodbg_core
     PUBLIC
-      advapi32
+      Advapi32
+      Psapi
       ntdll
-      psapi
   )
 endif()
 
-# target_compile_definitions(robodbg PUBLIC UNICODE _UNICODE) TODO: switch to Unicode
+# Keep core outputs alongside top-level outputs
+set_target_properties(robodbg_core PROPERTIES
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/src/$<CONFIG>"
+  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/src/$<CONFIG>"
+  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/src/$<CONFIG>"
+)

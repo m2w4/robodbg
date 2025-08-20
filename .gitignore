@@ -1,5 +1,6 @@
 # Ignore build outputs
 build/
+build-win32/
 *.exe
 *.obj
 *.lib

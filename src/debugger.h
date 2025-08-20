@@ -727,7 +727,7 @@ public:
      * @param exeName Path to the executable.
      * @return 0 on success; non-zero on failure.
      */
-    int startProcess(std::string exeName);
+    int start(std::string exeName);
 
     /**
      * @brief Starts a process under debugging with arguments.
@@ -735,20 +735,20 @@ public:
      * @param args for the debugged application.
      * @return 0 on success; non-zero on failure.
      */
-    int startProcess(std::string exeName, const std::vector<std::string>& args);
+    int start(std::string exeName, const std::vector<std::string>& args);
 
     /**
      * @brief Attaches to a running process by name.
      * @param exeName Process image name (e.g., "notepad.exe").
      * @return 0 on success; non-zero on failure.
      */
-    int attachToProcess(std::string exeName);
+    int attach(std::string exeName);
 
     /**
      * @brief Detaches from the current debuggee.
      * @return 0 on success; non-zero on failure.
      */
-    int detachFromProcess();
+    int detach();
 
     /**
      * @brief Main debugger message loop.

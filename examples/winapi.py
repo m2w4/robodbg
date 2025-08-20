@@ -1,6 +1,6 @@
-#Example usage of robodbg in addition to ctypes to use win32 APIs
+# Example usage of robodbg in addition to ctypes to use win32 APIs
 
-from robodbg.x64 import Debugger, BreakpointAction
+from robodbg import Debugger, BreakpointAction
 
 import ctypes
 from ctypes import wintypes
@@ -8,7 +8,8 @@ from ctypes import wintypes
 # WinAPI constants
 TH32CS_SNAPTHREAD = 0x00000004
 
-kernel32 = ctypes.WinDLL('kernel32', use_last_error=True)
+kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+
 
 class THREADENTRY32(ctypes.Structure):
     _fields_ = [
@@ -20,6 +21,7 @@ class THREADENTRY32(ctypes.Structure):
         ("tpDeltaPri", wintypes.LONG),
         ("dwFlags", wintypes.DWORD),
     ]
+
 
 def list_threads_of_process(hProcess):
     """List thread IDs belonging to a process HANDLE."""
@@ -48,23 +50,23 @@ def list_threads_of_process(hProcess):
     finally:
         kernel32.CloseHandle(snapshot)
 
+
 class PyDebugger(Debugger):
     def __init__(self):
         super().__init__()
         print("[PyDebugger] Initialized")
 
-    def onStart(self, imageBase, entryPoint):
-        print(f"[onStart] Image Base: {hex(imageBase)}, Entry Point: {hex(entryPoint)}")
-        capsule = wintypes.HANDLE(self.getProcessHandle( ))
+    def on_start(self, image_base, entry_point):
+        print(f"[on_start] Image Base: {hex(image_base)}, Entry Point: {hex(entry_point)}")
+        capsule = wintypes.HANDLE(self.get_process_handle())
         print(list_threads_of_process(capsule))
 
-    def onEnd(self, exitCode, pid):
-        print(f"[onEnd] Exit Code: {exitCode}, PID: {pid}")
+    def on_end(self, exit_code, pid):
+        print(f"[on_end] Exit Code: {exitCode}, PID: {pid}")
 
-    def onAttach(self):
-        print("[onAttach] Attached to process")
+
 
 if __name__ == "__main__":
-    p = PyDebugger( )
-    p.startProcess("notepad.exe")
-    p.loop( )
+    p = PyDebugger()
+    p.start("notepad.exe")
+    p.loop()

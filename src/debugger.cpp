@@ -52,7 +52,7 @@ uintptr_t Debugger::ASLR(uintptr_t address) {
 }
 
 // Attach to an existing process
-int Debugger::attachToProcess(std::string exeName) {
+int Debugger::attach(std::string exeName) {
     DWORD pid = Util::findProcessId(exeName);
     if (pid == 0) {
         std::cerr << "Process not found: " << exeName << std::endl;
@@ -74,7 +74,7 @@ int Debugger::attachToProcess(std::string exeName) {
     return 0;
 }
 
-int Debugger::detachFromProcess(  ) {
+int Debugger::detach(  ) {
     // Detach the debugger
     if (!DebugActiveProcessStop(debuggedPid)) {
         std::cerr << "Failed to detach debugger. Error: " << GetLastError() << std::endl;
@@ -84,7 +84,7 @@ int Debugger::detachFromProcess(  ) {
 }
 
 // Start a new process under debug control
-int Debugger::startProcess(std::string exeName) {
+int Debugger::start(std::string exeName) {
     STARTUPINFO si = { sizeof(si) };
     PROCESS_INFORMATION pi;
 
@@ -108,7 +108,7 @@ int Debugger::startProcess(std::string exeName) {
     return 0;
 }
 
-int Debugger::startProcess(std::string exeName, const std::vector<std::string>& args) {
+int Debugger::start(std::string exeName, const std::vector<std::string>& args) {
     STARTUPINFO si = { sizeof(si) };
     PROCESS_INFORMATION pi{};
 

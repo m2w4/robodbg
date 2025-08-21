@@ -136,6 +136,10 @@ public:
         return reinterpret_cast<uintptr_t>(this->getProcessHandle());
     }
 
+    RoboDBG::MemoryRegion_t py_get_page_by_address(uintptr_t address) {
+        return this->getPageByAddress(reinterpret_cast<LPVOID>(address));
+    }
+
     #ifdef _WIN64
     bool py_get_flag(HANDLE hThread, RoboDBG::Flags64 flag) { return this->getFlag(hThread, flag); }
     void py_set_flag(HANDLE hThread, RoboDBG::Flags64 flag, bool enabled) { this->setFlag(hThread, flag, enabled); }
@@ -300,6 +304,12 @@ NB_MODULE(dbg, m) {
          [](RoboDBG::Debugger &self) {
              return static_cast<PyDebugger&>(self).getMemoryPages();
          })
+
+    .def("get_page_by_address",
+         [](RoboDBG::Debugger &self, uintptr_t address) {
+             return static_cast<PyDebugger&>(self).py_get_page_by_address(address);
+         },
+         "address"_a)
 
     .def("change_memory_protection",
          [](RoboDBG::Debugger &self, RoboDBG::MemoryRegion_t page, DWORD newProtect) {

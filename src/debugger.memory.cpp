@@ -57,6 +57,9 @@ bool Debugger::changeMemoryProtection(MemoryRegion_t page, DWORD newProtect) { /
     return changeMemoryProtection(page.BaseAddress, page.RegionSize, newProtect);
 }
 
+// -------------------------------------------------------------
+// Changes Memory Protection of a Memory Region
+// -------------------------------------------------------------
 bool Debugger::changeMemoryProtection(LPVOID baseAddress, SIZE_T regionSize, DWORD newProtect) {
     DWORD oldProtect;
     if (VirtualProtectEx(hProcessGlobal, baseAddress, regionSize, newProtect, &oldProtect)) {

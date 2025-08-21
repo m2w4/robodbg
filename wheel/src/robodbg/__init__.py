@@ -1,6 +1,6 @@
 import platform
+from .debugger import Debugger, PageProtection
 
-from .debugger import Debugger
 from .dbg import (
     BreakpointAction,
     AccessType,
@@ -17,7 +17,8 @@ imports = [
     "ThreadInfo",
     "MemoryRegion",
     "Debugger",
-    "DRReg"
+    "DRReg",
+    "PageProtection"
 ]
 
 
@@ -34,3 +35,4 @@ elif platform.architecture()[0] == "32bit":
     imports.append("Register32")
 
 __all__ = imports
+

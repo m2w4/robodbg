@@ -1,4 +1,31 @@
+from enum import IntFlag
 from .dbg import Debugger as BaseDebugger, BreakpointAction
+
+#Memory Contants from https://learn.microsoft.com/en-us/windows/win32/memory/memory-protection-constants
+class PageProtection(IntFlag):
+    # Basic protection flags
+    NOACCESS             = 0x01
+    READONLY             = 0x02
+    READWRITE            = 0x04
+    WRITECOPY            = 0x08
+    EXECUTE              = 0x10
+    EXECUTE_READ         = 0x20
+    EXECUTE_READWRITE    = 0x40
+    EXECUTE_WRITECOPY    = 0x80
+
+    # Modifiers
+    GUARD                = 0x100
+    NOCACHE              = 0x200
+    WRITECOMBINE         = 0x400
+
+    # Control Flow Guard (CFG)
+    TARGETS_INVALID      = 0x40000000
+    TARGETS_NO_UPDATE    = 0x40000000  # Alias, same bitmask
+
+    # Enclave-specific (Intel SGX)
+    ENCLAVE_DECOMMIT     = 0x20000000
+    ENCLAVE_THREAD_CTRL  = 0x80000000
+    ENCLAVE_UNVALIDATED  = 0x10000000
 
 
 class Debugger(BaseDebugger):

@@ -2,6 +2,9 @@
 build/
 build-win32/
 *.egg-info/
+html/
+latex/
+*.bak
 *.exe
 *.obj
 *.lib

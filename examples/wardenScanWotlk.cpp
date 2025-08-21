@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <iostream>
-#include "src/debugger.h"
-#include "src/util.h"
+#include <robodbg/debugger.h>
+#include <robodbg/util.h>
 
 using namespace RoboDBG;
 class WardenScanner : public Debugger {
@@ -71,7 +71,7 @@ public:
 
             if (edx > 0) {
                 char* buf = new char[edx];
-                if (readTargetMemory( static_cast<uintptr_t>(esi), buf, edx)) {
+                if (readMemory( static_cast<uintptr_t>(esi), buf, edx)) {
                     for (int i = 0; i < edx; ++i) {
                         csv << std::setw(2) << static_cast<unsigned>(static_cast<unsigned char>(buf[i]));
                     }
@@ -92,7 +92,7 @@ public:
 int main( ) {
     Util::EnableDebugPrivilege( );
     WardenScanner *ws = new WardenScanner( );
-    if(ws->attachToProcess("WoW.exe") == 0)
+    if(ws->attach("WoW.exe") == 0)
     {
         std::cout << "attached!" <<std::endl;
     }

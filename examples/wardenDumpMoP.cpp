@@ -2,8 +2,8 @@
 
 #include <stdio.h>
 #include <iostream>
-#include <autodbg/debugger.h>
-#include <autodbg/util.h>
+#include <robodbg/debugger.h>
+#include <robodbg/util.h>
 
 using namespace RoboDBG;
 
@@ -59,7 +59,7 @@ public:
                 {
                     std::cout << "[*] Warden Module Address:  " << std::hex << addr << std::endl;
                     std::vector<BYTE> module(wardenSize);
-                    if( readTargetMemory(addr, module.data( ), module.size( )) )
+                    if( readMemory(addr, module.data( ), module.size( )) )
                     {
                         saveModule(module, "warden.bin");
                         return BREAK;
@@ -78,7 +78,7 @@ public:
 int main( ) {
     EnableDebugPrivilege( );
     WardenDumper *ws = new WardenDumper( );
-    if(ws->attachToProcess("WoW.exe") == 0)
+    if(ws->attach("WoW.exe") == 0)
     {
         std::cout << "Attached to application!" <<std::endl;
     }

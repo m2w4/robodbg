@@ -1,5 +1,6 @@
 #pragma once
-#include "src/debugger.h"
+#include <robodbg/debugger.h>
+#include <robodbg/util.h>
 #include <iostream>
 
 using namespace RoboDBG;

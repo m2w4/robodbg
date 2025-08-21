@@ -43,6 +43,6 @@ class WardenSniffer(Debugger):
 
 if __name__ == "__main__":
     dbg = WardenSniffer()
-    dbg.attach("Wow.exe")
+    dbg.attach("WoW.exe")
     dbg.loop()
 

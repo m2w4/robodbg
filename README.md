@@ -38,7 +38,7 @@ class MyDebugger(Debugger):
         self.set_breakpoint(0x00401000)
         
     def on_breakpoint(self, address, hThread):
-        print(f"[onBreakpoint] Breakpoint hit at {hex(address)}")
+        print(f"[on_breakpoint] Breakpoint hit at {hex(address)}")
         return BreakpointAction.BREAK
 ```
 

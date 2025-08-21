@@ -18,49 +18,49 @@ A doxygen documentation with all functions is available under <a href="https://w
 ### Setting breakpoints
 
 ```py
-from robodbg.x64 import *
+from robodbg import Debugger
 
 class MyDebugger(Debugger):
-    def onStart(self, imageBase, entryPoint):
+    def on_start(self, image_base, entry_point):
         self.setBreakpoint(0x00401000)
 
-    def onBreakpoint(self, address, hThread):
-        print(f"[onBreakpoint] Breakpoint hit at {hex(address)}")
+    def on_breakpoint(self, address, hThread):
+        print(f"[on_breakpoint] Breakpoint hit at {hex(address)}")
 
 if __name__ == "__main__":
     dbg = MyDebugger( )
-    dbg.attachToProcess("application.exe")
+    dbg.attach("application.exe")
     dbg.loop()
 ```
 
 ### Setting Hardware Breakpoints
 
 ```py
-from robodbg.x64 import Debugger, BreakpointAction, Register32, DRReg, AccessType, BreakpointLength
+from robodbg import Debugger, BreakpointAction, Register32, DRReg, AccessType, BreakpointLength
 
 class MyDebugger(Debugger):
-    def onStart(self, imageBase, entryPoint):
+    def onStart(self, image_base, entry_point):
         self.hideDebugger( )
         print("[OnStart] Setting hardware breakpoint")
-        self.setHardwareBreakpoint(0x00401000, DRReg.DR1, AccessType.EXECUTE, BreakpointLength.BYTE)
+        self.set_hardware_breakpoint(0x00401000, DRReg.DR1, AccessType.EXECUTE, BreakpointLength.BYTE)
 
-    def onHardwareBreakpoint(self, address, hThread, reg):
+    def on_hardware_breakpoint(self, address, hThread, reg):
         print(f"[onHardwareBreakpoint] HWBP at {hex(address)} in {reg}")
         
 # Setting Hardware Breakpoints
         
 if __name__ == "__main__":
     dbg = MyDebugger()
-    dbg.attachToProcess("application.exe")
+    dbg.attach("application.exe")
     dbg.loop()
 ```
 
 ### Registers & Flags
 
 ```py
-eax = self.getRegister(hThread,  Register32.EAX)
+eax = self.get_register(hThread,  Register32.EAX)
 eax += 1
-self.setRegister(hThread, Register32.EAX)
+self.set_register(hThread, Register32.EAX)
 ```
 
 ```py
@@ -71,7 +71,7 @@ self.setFlag(hThread, Flags64.ZF, True)
 
 #### Search in memory
 ```py
-hits = self.searchInMemory([0x56, 0x57, 0xFC, 0x8B, 0x54])
+hits = self.search_in_memory([0x56, 0x57, 0xFC, 0x8B, 0x54])
 print(f"Found {len(hits)} hits")
 for a in hits[:10]:
     print(f"  0x{a:08X}")
@@ -79,11 +79,11 @@ for a in hits[:10]:
 
 #### Read Memory
 ```py
-hits = self.readMemory(0x00401000, 4) #read 4 Byte
+hits = self.read_memory(0x00401000, 4) #read 4 Byte
 ```
 
 
 #### Write Memory
 ```py
-hits = self.writeMemory(0x00401000, "\x90\x90\x90\xCC", 4) #write 4 Byte
+hits = self.write_memory(0x00401000, "\x90\x90\x90\xCC", 4) #write 4 Byte
 ```

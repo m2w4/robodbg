@@ -1,6 +1,7 @@
 # Ignore build outputs
 build/
 build-win32/
+*.egg-info/
 *.exe
 *.obj
 *.lib
@@ -8,6 +9,8 @@ build-win32/
 *.old
 *.pyd
 *.zip
+*.tar.gz
+*.whl
 
 # Ignore Python bytecode
 __pycache__/
@@ -28,5 +31,4 @@ Makefile
 #
 examples/old
 dll
-wheel/
 docs/html

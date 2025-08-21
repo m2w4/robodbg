@@ -1,0 +1,32 @@
+[build-system]
+requires = ["scikit-build-core>=0.9", "setuptools>=64", "wheel", "nanobind"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "robodbg"
+version = "0.0.2"
+readme = "README.md"
+authors = [{ name = "Milkshake", email = "friday-font-guru@duck.com" }]
+description = "A debugger interface for Windows"
+requires-python = ">=3.11,<3.14"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Environment :: Win32 (MS Windows)",
+]
+license = "MIT"
+license-files = ["LICENSE.TXT"]
+dependencies = []
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["robodbg*"]
+
+[tool.cibuildwheel]
+build = ["cp311-*", "cp312-*", "cp313-*"]
+
+[tool.setuptools.package-data]
+robodbg = ["*.pyd"]

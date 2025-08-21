@@ -31,13 +31,13 @@ The doxygen documentation is available at <a href="https://www.robodbg.com">robo
 **Python**
 
 ```py
-from robodbg.x86 import Debugger, BreakpointAction
+from robodbg import Debugger, BreakpointAction
 
 class MyDebugger(Debugger):
-    def onStart(self, imageBase, entryPoint):
-        self.setBreakpoint(0x00401000)
+    def on_start(self, image_base, entry_point):
+        self.set_breakpoint(0x00401000)
         
-    def onBreakpoint(self, address, hThread):
+    def on_breakpoint(self, address, hThread):
         print(f"[onBreakpoint] Breakpoint hit at {hex(address)}")
         return BreakpointAction.BREAK
 ```

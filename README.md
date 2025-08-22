@@ -18,7 +18,7 @@ Download the latest `.lib` and `.h` files from the [Releases](https://github.com
 ### Python  
 Install directly from GitHub using `pip`:
 ```bash
-pip install https://github.com/m2w4/robodbg/releases/download/v0.0.1/py_robodbg-0.0.1.tar.gz
+pip install robodbg
 ```
 
 ## 🧑‍💻 Getting Started

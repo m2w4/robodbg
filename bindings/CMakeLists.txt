@@ -36,6 +36,18 @@ endif()
 # Build the Python extension module named 'dbg' (matches NB_MODULE(dbg, m))
 nanobind_add_module(dbg ${ROBODBG_BIND_SOURCES})
 
+nanobind_add_stub(
+  my_ext_stub
+  MODULE dbg
+  OUTPUT dbg.pyi
+  PYTHON_PATH $<TARGET_FILE_DIR:dbg>
+  MARKER_FILE py.typed         # creates py.typed for PEP 561
+  DEPENDS dbg
+)
+
+install(TARGETS dbg DESTINATION ".")
+install(FILES py.typed dbg DESTINATION ".")
+
 target_link_libraries(dbg PRIVATE robodbg_core)
 target_compile_features(dbg PRIVATE cxx_std_20)
 target_include_directories(dbg PRIVATE "${CMAKE_SOURCE_DIR}/src")

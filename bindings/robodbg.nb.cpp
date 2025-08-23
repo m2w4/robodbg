@@ -44,6 +44,10 @@ public:
         NB_OVERRIDE_NAME("on_start", onStart, imageBase, entryPoint);
     }
 
+    void onAttach(HANDLE hProcess) override {
+        NB_OVERRIDE_NAME("on_attach", onAttach, hProcess);
+    }
+
     void onEnd(DWORD exitCode, DWORD pid) override {
         NB_OVERRIDE_NAME("on_end", onEnd, exitCode, pid);
     }
@@ -238,7 +242,7 @@ NB_MODULE(dbg, m) {
     .def(nb::init<>())
     .def(nb::init<bool>(), "verbose"_a=false)
 
-    .def("loop", &RoboDBG::Debugger::loop)
+    .def("loop", &RoboDBG::Debugger::loop, "Starts the debugging loop")
     .def("start",
          nb::overload_cast<std::string>(&RoboDBG::Debugger::start),
          "exe_name"_a)
@@ -248,7 +252,15 @@ NB_MODULE(dbg, m) {
          "exe_name"_a, "args"_a)
 
     .def("detach", &RoboDBG::Debugger::detach)
-    .def("attach", &RoboDBG::Debugger::attach)
+    .def("attach",
+         [](RoboDBG::Debugger &self, const std::string &exe_name) {
+             return static_cast<PyDebugger&>(self).attach(exe_name);
+         }, "exe_name"_a)
+
+    .def("attach",
+         [](RoboDBG::Debugger &self, uint32_t pid) {
+             return static_cast<PyDebugger&>(self).attach(static_cast<DWORD>(pid));
+         }, "pid"_a)
 
     .def("set_breakpoint",
          [](RoboDBG::Debugger &self, uintptr_t address) {

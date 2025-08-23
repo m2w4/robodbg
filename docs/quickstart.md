@@ -8,7 +8,7 @@ Download the latest `.lib` and `.h` files from the [Releases](https://github.com
 ### Python  
 Install directly from GitHub using `pip`:
 ```bash
-pip install https://github.com/m2w4/robodbg/releases/download/v0.0.1/robodbg_0.0.1.tar.gz
+pip install robodbg
 ```
 
 A doxygen documentation with all functions is available under <a href="https://www.robodbg.com">robodbg.com</a>.
@@ -22,7 +22,7 @@ from robodbg import Debugger
 
 class MyDebugger(Debugger):
     def on_start(self, image_base, entry_point):
-        self.setBreakpoint(0x00401000)
+        self.set_breakpoint(0x00401000)
 
     def on_breakpoint(self, address, hThread):
         print(f"[on_breakpoint] Breakpoint hit at {hex(address)}")
@@ -40,7 +40,7 @@ from robodbg import Debugger, BreakpointAction, Register32, DRReg, AccessType, B
 
 class MyDebugger(Debugger):
     def onStart(self, image_base, entry_point):
-        self.hideDebugger( )
+        self.hide_debugger( )
         print("[OnStart] Setting hardware breakpoint")
         self.set_hardware_breakpoint(0x00401000, DRReg.DR1, AccessType.EXECUTE, BreakpointLength.BYTE)
 
@@ -64,7 +64,7 @@ self.set_register(hThread, Register32.EAX)
 ```
 
 ```py
-self.setFlag(hThread, Flags64.ZF, True)
+self.set_flag(hThread, Flags64.ZF, True)
 ```
 
 ### Memory

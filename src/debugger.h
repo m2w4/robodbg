@@ -222,7 +222,7 @@ protected:
     /**
      * @brief Called after successfully attaching to an already running process.
      */
-    virtual void onAttach();
+    virtual void onAttach(HANDLE hProcess);
 
     /**
      * @brief Called when a thread is created in the debuggee.
@@ -743,6 +743,13 @@ public:
      * @return 0 on success; non-zero on failure.
      */
     int attach(std::string exeName);
+
+    /**
+     * @brief Attaches to a running process by PID.
+     * @param pid Process ID.
+     * @return 0 on success; non-zero on failure.
+     */
+    int attach(DWORD pid);
 
     /**
      * @brief Detaches from the current debuggee.

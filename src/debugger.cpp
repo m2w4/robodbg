@@ -70,7 +70,28 @@ int Debugger::attach(std::string exeName) {
         return -1;
     }
     debuggedPid = pid;
-    onAttach( );
+    onAttach( hProcessGlobal );
+    return 0;
+}
+
+int Debugger::attach(DWORD pid) {
+    if (pid == 0) {
+        std::cerr << "Process not found: PID=" << pid << std::endl;
+        return -1;
+    }
+    std::cout << "Attach to " << pid << std::endl;
+    if (!DebugActiveProcess(pid)) {
+        std::cerr << "Failed to attach to process: " << GetLastError() << std::endl;
+        return -1;
+    }
+
+    hProcessGlobal = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+    if (hProcessGlobal == NULL) {
+        std::cerr << "Failed to open process: " << GetLastError() << std::endl;
+        return -1;
+    }
+    debuggedPid = pid;
+    onAttach( hProcessGlobal );
     return 0;
 }
 

@@ -23,7 +23,7 @@ namespace RoboDBG {
         << std::dec << " (" << exitCode << ")\n";
     }
 
-    void Debugger::onAttach() {
+    void Debugger::onAttach(HANDLE hProcess) {
         if (!this->verbose) return;
 
         std::cout << "[*] Debugger::onAttach: Attached\n";

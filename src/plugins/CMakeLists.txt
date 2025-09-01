@@ -1,17 +1,11 @@
 # Core library collecting all non-binding sources.
 
-# Grab all core sources (exclude bindings/)
+# Grab all core sources
 file(GLOB_RECURSE ROBODBG_CORE_SOURCES CONFIGURE_DEPENDS
   "${CMAKE_SOURCE_DIR}/src/plugins/*.cpp"
   "${CMAKE_SOURCE_DIR}/src/plugins/*.cc"
   "${CMAKE_SOURCE_DIR}/src/plugins/*.cxx"
 )
-# Remove binding sources from the core list (they are compiled into the .pyd)
-list(FILTER ROBODBG_CORE_SOURCES EXCLUDE REGEX "/bindings/")
-
-if(ROBODBG_CORE_SOURCES STREQUAL "")
-  message(FATAL_ERROR "No core sources found in src/ (excluding src/bindings).")
-endif()
 
 add_library(robodbg_core STATIC ${ROBODBG_CORE_SOURCES})
 add_library(RoboDBG::core ALIAS robodbg_core)

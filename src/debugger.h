@@ -781,7 +781,13 @@ public:
      * @brief Detaches from the current debuggee.
      * @return 0 on success; non-zero on failure.
      */
-    int detach();
+    bool detach();
+
+    /**
+     * @brief Exits a debugged process
+     * @return true on success; false on failure.
+     */
+    bool exit( );
 
     /**
      * @brief Main debugger message loop.

@@ -97,13 +97,14 @@ int Debugger::attach(DWORD pid) {
     return 0;
 }
 
-int Debugger::detach(  ) {
+bool Debugger::detach(  ) {
     // Detach the debugger
     if (!DebugActiveProcessStop(debuggedPid)) {
         std::cerr << "[-] Failed to detach debugger. Error: " << GetLastError() << std::endl;
-        return 1;
+        return false;
     }
-    return 0;
+    this->dbgLoop = false;
+    return true;
 }
 
 // Start a new process under debug control
@@ -166,6 +167,22 @@ int Debugger::start(std::string exeName, const std::vector<std::string>& args) {
     hThreadGlobal  = pi.hThread;
     initPlugins( );
     return 0;
+}
+
+bool Debugger::exit( ) {
+    if(!detach( )) return false;
+    if (!hProcessGlobal) {
+        return false;
+    }
+
+    // Attempt to terminate the process
+    if (!TerminateProcess(hProcessGlobal, 0)) {
+        std::cerr << "[-] TerminateProcess failed. Error: " << GetLastError() << std::endl;
+        return false;
+    }
+
+    CloseHandle(hProcessGlobal);
+    return true;
 }
 
 
@@ -262,7 +279,7 @@ int Debugger::loop() {
     bool stepping = false;
 
     DEBUG_EVENT dbgEvent;
-    while (true) {
+    while (this->dbgLoop) {
         if (!WaitForDebugEvent(&dbgEvent, INFINITE)) break;
 
         DWORD cont = DBG_CONTINUE;

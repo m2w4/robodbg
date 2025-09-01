@@ -55,42 +55,44 @@ uintptr_t Debugger::ASLR(uintptr_t address) {
 int Debugger::attach(std::string exeName) {
     DWORD pid = Util::findProcessId(exeName);
     if (pid == 0) {
-        std::cerr << "Process not found: " << exeName << std::endl;
+        std::cerr << "[-] Process not found: " << exeName << std::endl;
         return -1;
     }
-    std::cout << "Attach to " << pid << std::endl;
+    std::cout << "[+] Attached to " << pid << std::endl;
     if (!DebugActiveProcess(pid)) {
-        std::cerr << "Failed to attach to process: " << GetLastError() << std::endl;
+        std::cerr << "[-] Failed to attach to process: " << GetLastError() << std::endl;
         return -1;
     }
 
     hProcessGlobal = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
     if (hProcessGlobal == NULL) {
-        std::cerr << "Failed to open process: " << GetLastError() << std::endl;
+        std::cerr << "[-] Failed to open process: " << GetLastError() << std::endl;
         return -1;
     }
     debuggedPid = pid;
+    initPlugins( );
     onAttach( hProcessGlobal );
     return 0;
 }
 
 int Debugger::attach(DWORD pid) {
     if (pid == 0) {
-        std::cerr << "Process not found: PID=" << pid << std::endl;
+        std::cerr << "[-] Process not found: PID=" << pid << std::endl;
         return -1;
     }
-    std::cout << "Attach to " << pid << std::endl;
+    std::cout << "[+] Attach to " << pid << std::endl;
     if (!DebugActiveProcess(pid)) {
-        std::cerr << "Failed to attach to process: " << GetLastError() << std::endl;
+        std::cerr << "[-] Failed to attach to process: " << GetLastError() << std::endl;
         return -1;
     }
 
     hProcessGlobal = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
     if (hProcessGlobal == NULL) {
-        std::cerr << "Failed to open process: " << GetLastError() << std::endl;
+        std::cerr << "[-] Failed to open process: " << GetLastError() << std::endl;
         return -1;
     }
     debuggedPid = pid;
+    initPlugins( );
     onAttach( hProcessGlobal );
     return 0;
 }
@@ -98,7 +100,7 @@ int Debugger::attach(DWORD pid) {
 int Debugger::detach(  ) {
     // Detach the debugger
     if (!DebugActiveProcessStop(debuggedPid)) {
-        std::cerr << "Failed to detach debugger. Error: " << GetLastError() << std::endl;
+        std::cerr << "[-] Failed to detach debugger. Error: " << GetLastError() << std::endl;
         return 1;
     }
     return 0;
@@ -120,12 +122,13 @@ int Debugger::start(std::string exeName) {
                        NULL,
                        &si,
                        &pi)) {
-        std::cerr << "CreateProcess failed: " << GetLastError() << std::endl;
+        std::cerr << "[-] CreateProcess failed: " << GetLastError() << std::endl;
         return -1;
                        }
 
     hProcessGlobal = pi.hProcess;
     hThreadGlobal  = pi.hThread;
+    initPlugins( );
     return 0;
 }
 
@@ -155,12 +158,13 @@ int Debugger::start(std::string exeName, const std::vector<std::string>& args) {
                         &si,
                         &pi
     )) {
-        std::cerr << "CreateProcess failed: " << GetLastError() << std::endl;
+        std::cerr << "[-] CreateProcess failed: " << GetLastError() << std::endl;
         return -1;
     }
 
     hProcessGlobal = pi.hProcess;
     hThreadGlobal  = pi.hThread;
+    initPlugins( );
     return 0;
 }
 
@@ -203,9 +207,9 @@ void Debugger::printIP(HANDLE hThread) {
     ctx.ContextFlags = CONTEXT_CONTROL;
     if (GetThreadContext(hThread, &ctx)) {
         #ifdef _WIN64
-        std::cout << "[!] RIP = 0x" << std::hex << ctx.Rip << std::endl;
+        std::cout << "[-] RIP = 0x" << std::hex << ctx.Rip << std::endl;
         #else
-        std::cout << "[!] EIP = 0x" << std::hex << ctx.Eip << std::endl;
+        std::cout << "[-] EIP = 0x" << std::hex << ctx.Eip << std::endl;
         #endif
     }
 }
@@ -216,13 +220,13 @@ void Debugger::actualizeThreadList() {
 
     DWORD processId = GetProcessId(hProcessGlobal);
     if (processId == 0) {
-        std::cerr << "Failed to get process ID from handle. Error: " << GetLastError() << std::endl;
+        std::cerr << "[-] Failed to get process ID from handle. Error: " << GetLastError() << std::endl;
         return;
     }
 
     HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
     if (snapshot == INVALID_HANDLE_VALUE) {
-        std::cerr << "Failed to create thread snapshot. Error: " << GetLastError() << std::endl;
+        std::cerr << "[-] Failed to create thread snapshot. Error: " << GetLastError() << std::endl;
         return;
     }
 
@@ -234,7 +238,7 @@ void Debugger::actualizeThreadList() {
             if (te32.th32OwnerProcessID == processId) {
                 HANDLE hThread = OpenThread(THREAD_ALL_ACCESS, FALSE, te32.th32ThreadID);
                 if (!hThread) {
-                    std::cerr << "Failed to open thread " << te32.th32ThreadID << ". Error: " << GetLastError() << std::endl;
+                    std::cerr << "[-] Failed to open thread " << te32.th32ThreadID << ". Error: " << GetLastError() << std::endl;
                     continue;
                 }
 
@@ -336,7 +340,7 @@ int Debugger::loop() {
                 if (!hThread) break;
 
                 if (code == EXCEPTION_BREAKPOINT) {
-                    if(this->verbose) std::cout << "[~] Breakpoint Hit" << std::endl;
+                    if(this->verbose) std::cout << "[+] Breakpoint Hit" << std::endl;
                     auto it = breakpoints.find(addr);
                     if (it != breakpoints.end()) {
                         //std::cout << "[*] Loop Breakpoint hit at: 0x" << std::hex << (DWORD_PTR)addr << "\n";
@@ -354,6 +358,7 @@ int Debugger::loop() {
                             }
                         } else { //BP_DO_NOP
                             stepping = false;
+                            breakpoints.erase(addr);
                         }
                     }
                 } else if (code == EXCEPTION_SINGLE_STEP && stepping) {
@@ -361,7 +366,7 @@ int Debugger::loop() {
                     {
                         if(restoreHwBP)
                         {
-                            if(this->verbose) std::cout << "[~] Restoring hardware breakpoint" << std::endl;
+                            if(this->verbose) std::cout << "[+] Restoring hardware breakpoint" << std::endl;
                             setHardwareBreakpoint(hwBPToRestore);
                             restoreHwBP = false;
                         } else {
@@ -419,8 +424,6 @@ int Debugger::loop() {
                     ULONG_PTR rawAddr = dbgEvent.u.Exception.ExceptionRecord.ExceptionInformation[1];
                     LPVOID faultingAddress = reinterpret_cast<LPVOID>(rawAddr);
                     ULONG_PTR accessType = dbgEvent.u.Exception.ExceptionRecord.ExceptionInformation[0];
-                    //MemoryRegion_t mr = getPageByAddress( faultingAddress);
-                    //changeMemoryProtection(mr, PAGE_EXECUTE_READWRITE);
                     onAccessViolation( static_cast<uintptr_t>(rawAddr), reinterpret_cast<uintptr_t>(faultingAddress), static_cast<long>(accessType));
                     //enableSingleStep(hThread);
                     //stepping = true;

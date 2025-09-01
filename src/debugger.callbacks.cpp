@@ -1,5 +1,5 @@
 #include "debugger.h"
-#include <iostream>   // ensure iostream is visible
+#include <iostream>
 
 namespace RoboDBG {
 
@@ -26,7 +26,7 @@ namespace RoboDBG {
     void Debugger::onAttach(HANDLE hProcess) {
         if (!this->verbose) return;
 
-        std::cout << "[*] Debugger::onAttach: Attached\n";
+        std::cout << "[*] Debugger::onAttach: Attached (HANDLE " << std::hex << hProcess << ")\n";
     }
 
     BreakpointAction Debugger::onBreakpoint(uintptr_t address, HANDLE hThread) {

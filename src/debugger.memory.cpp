@@ -2,9 +2,10 @@
 
 namespace RoboDBG {
 
-bool Debugger::writeMemory(LPVOID address, const void* buffer, SIZE_T size) {
+bool Debugger::writeMemory(LPVOID address, const void* buffer, SIZE_T size)
+{
     SIZE_T bytesWritten = 0;
-    if (!WriteProcessMemory(hProcessGlobal,address, buffer, size, &bytesWritten) || bytesWritten != size) {
+    if (!WriteProcessMemory(hProcessGlobal, address, buffer, size, &bytesWritten) || bytesWritten != size) {
         std::cerr << "WriteProcessMemory failed: " << GetLastError() << std::endl;
         return false;
     }
@@ -12,7 +13,8 @@ bool Debugger::writeMemory(LPVOID address, const void* buffer, SIZE_T size) {
     return true;
 }
 
-bool Debugger::readMemory( LPVOID address, void* buffer, SIZE_T size) {
+bool Debugger::readMemory(LPVOID address, void* buffer, SIZE_T size)
+{
     SIZE_T bytesRead = 0;
     if (!ReadProcessMemory(hProcessGlobal, address, buffer, size, &bytesRead) || bytesRead != size) {
         std::cerr << "ReadProcessMemory failed: " << GetLastError() << std::endl;
@@ -21,7 +23,8 @@ bool Debugger::readMemory( LPVOID address, void* buffer, SIZE_T size) {
     return true;
 }
 
-MemoryRegion_t Debugger::getPageByAddress(LPVOID baseAddress) {
+MemoryRegion_t Debugger::getPageByAddress(LPVOID baseAddress) // TODO: make a std::optional out of it
+{
     SYSTEM_INFO sysInfo;
     GetSystemInfo(&sysInfo);
 
@@ -33,11 +36,11 @@ MemoryRegion_t Debugger::getPageByAddress(LPVOID baseAddress) {
             break;
 
         BYTE* regionStart = static_cast<BYTE*>(mbi.BaseAddress);
-        BYTE* regionEnd   = regionStart + mbi.RegionSize;
-        BYTE* target      = static_cast<BYTE*>(baseAddress);
+        BYTE* regionEnd = regionStart + mbi.RegionSize;
+        BYTE* target = static_cast<BYTE*>(baseAddress);
 
         if (target >= regionStart && target < regionEnd) {
-            return MemoryRegion_t{
+            return MemoryRegion_t {
                 mbi.BaseAddress,
                 mbi.RegionSize,
                 mbi.State,
@@ -50,35 +53,31 @@ MemoryRegion_t Debugger::getPageByAddress(LPVOID baseAddress) {
     }
 
     // Return invalid result
-    return MemoryRegion_t{ nullptr, 0, 0, 0, 0 };
+    return MemoryRegion_t { nullptr, 0, 0, 0, 0 };
 }
 
-bool Debugger::changeMemoryProtection(MemoryRegion_t page, DWORD newProtect) { //TODO: Use AccessRights enum instead of Memory Protection Constants (https://learn.microsoft.com/en-us/windows/win32/Memory/memory-protection-constants)
+bool Debugger::changeMemoryProtection(MemoryRegion_t page, DWORD newProtect)
+{ // TODO: Use AccessRights enum instead of Memory Protection Constants (https://learn.microsoft.com/en-us/windows/win32/Memory/memory-protection-constants)
     return changeMemoryProtection(page.BaseAddress, page.RegionSize, newProtect);
 }
 
-// -------------------------------------------------------------
-// Changes Memory Protection of a Memory Region
-// -------------------------------------------------------------
-bool Debugger::changeMemoryProtection(LPVOID baseAddress, SIZE_T regionSize, DWORD newProtect) {
+bool Debugger::changeMemoryProtection(LPVOID baseAddress, SIZE_T regionSize, DWORD newProtect)
+{
     DWORD oldProtect;
     if (VirtualProtectEx(hProcessGlobal, baseAddress, regionSize, newProtect, &oldProtect)) {
         std::cout << "[+] Changed protection at " << baseAddress
-        << " from 0x" << std::hex << oldProtect
-        << " to 0x" << newProtect << std::endl;
+                  << " from 0x" << std::hex << oldProtect
+                  << " to 0x" << newProtect << std::endl;
         return true;
     } else {
         std::cerr << "[-] Failed to change protection at " << baseAddress
-        << " - Error: " << GetLastError() << std::endl;
+                  << " - Error: " << GetLastError() << std::endl;
         return false;
     }
 }
 
-
-// -------------------------------------------------------------
-// Returns all readable, committed memory regions
-// -------------------------------------------------------------
-std::vector<MemoryRegion_t> Debugger::getMemoryPages() {
+std::vector<MemoryRegion_t> Debugger::getMemoryPages()
+{
     SYSTEM_INFO sysInfo;
     GetSystemInfo(&sysInfo);
 
@@ -105,12 +104,10 @@ std::vector<MemoryRegion_t> Debugger::getMemoryPages() {
     return regions;
 }
 
-// -------------------------------------------------------------
-// Searches for a binary pattern in all valid memory regions
-// -------------------------------------------------------------
-std::vector<uintptr_t> Debugger::searchInMemory(const std::vector<BYTE>& pattern) {
+std::vector<uintptr_t> Debugger::searchInMemory(const std::vector<BYTE>& pattern)
+{
     std::vector<uintptr_t> matches;
-    auto regions = getMemoryPages();  // Ensure correct capitalization if needed
+    auto regions = getMemoryPages(); // Ensure correct capitalization if needed
 
     for (const auto& region : regions) {
         // Skip regions that are not committed or inaccessible
@@ -135,7 +132,8 @@ std::vector<uintptr_t> Debugger::searchInMemory(const std::vector<BYTE>& pattern
 // -------------------------------------------------------------
 // prints all memory pages for debugging reasonss
 // -------------------------------------------------------------
-void Debugger::PrintMemoryPages() {
+void Debugger::PrintMemoryPages()
+{
     SYSTEM_INFO sysInfo;
     GetSystemInfo(&sysInfo);
 
@@ -147,10 +145,10 @@ void Debugger::PrintMemoryPages() {
             break;
 
         std::cout << "BaseAddr: " << mbi.BaseAddress
-        << " | RegionSize: " << mbi.RegionSize
-        << " | State: " << std::hex << mbi.State
-        << " | Protect: " << mbi.Protect
-        << " | Type: " << mbi.Type << std::endl;
+                  << " | RegionSize: " << mbi.RegionSize
+                  << " | State: " << std::hex << mbi.State
+                  << " | Protect: " << mbi.Protect
+                  << " | Type: " << mbi.Type << std::endl;
 
         addr = static_cast<BYTE*>(mbi.BaseAddress) + mbi.RegionSize;
     }

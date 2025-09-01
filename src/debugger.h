@@ -25,8 +25,10 @@
 #include <fstream>
 #include <winternl.h>
 #include <intrin.h>
+#include <memory>
 
 #include "util.h"
+#include "plugins/plugins.h"
 
 namespace RoboDBG {
 
@@ -172,6 +174,9 @@ namespace RoboDBG {
  */
 class Debugger {
 private:
+    std::unique_ptr<Imports> imports;
+    std::unique_ptr<Freezer> freezer;
+
     LPVOID bpAddrToRestore;
     bool needToRestoreBreakpoint; // TODO: rename to bpNeedToRestore
     int lastBpType;
@@ -186,14 +191,23 @@ private:
     void onPreStart();
     void onPreAttach();
 
+
+    /**
+     * @brief Called to initialize plugins. Must be called after attaching to processs
+     * @param imageBase Base address of the main image.
+     * @param entryPoint Entry point address of the process.
+     */
+    bool initPlugins( );
+
+
 protected:
     bool verbose;
     uintptr_t baseAddressOffset = 0; // TODO: Add a base image address, e.g: 0x00400000U
 
 #ifdef __WIN64
-    uintptr_t baseImageBase = 0x0000000140000000ULL; ///< Typical image base (with ASLR).
+    uintptr_t baseImageBase = 0x0000000140000000ULL; ///< Typical image base (without ASLR).
 #else
-    uintptr_t baseImageBase = 0x00400000U;           ///< Typical image base (with ASLR).
+    uintptr_t baseImageBase = 0x00400000U;           ///< Typical image base (without ASLR).
 #endif
     std::map<LPVOID, BYTE> breakpoints;
     std::map<LPVOID, hwBp_t> hwBreakpoints;
@@ -579,6 +593,12 @@ protected:
     }
 
     /**
+     * @brief Verifies existing breakpoints
+     * @return Number of removed invalid breakpoints
+     */
+    int verifyBreakpoints( );
+
+    /**
      * @brief Restores the original byte at a software breakpoint.
      * @param address Breakpoint address.
      */
@@ -711,6 +731,12 @@ protected:
         return hProcessGlobal;
     }
 public:
+    // Plugins
+
+    inline auto& getImports() { return imports; }
+    inline auto& getFreezer() { return freezer; }
+
+
     /**
      * @brief Constructs a Debugger with default settings.
      */

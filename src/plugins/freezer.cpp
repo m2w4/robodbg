@@ -51,8 +51,8 @@ std::optional<std::vector<ThreadState>> Freezer::suspendByPID(DWORD pid) {
     bool okAll = true;
 
     for (auto tid : tids) {
-        OpenThread(THREAD_SUSPEND_RESUME | THREAD_QUERY_INFORMATION | THREAD_SET_INFORMATION, FALSE, tid);
-        Handle th = Handle(OpenThread(THREAD_SUSPEND_RESUME | THREAD_QUERY_INFORMATION | THREAD_SET_INFORMATION, FALSE, tid));
+        //OpenThread(THREAD_SUSPEND_RESUME | THREAD_QUERY_INFORMATION | THREAD_SET_INFORMATION, FALSE, tid);
+        Handle th(OpenThread(THREAD_SUSPEND_RESUME | THREAD_QUERY_INFORMATION | THREAD_SET_INFORMATION, FALSE, tid));
         if (!th) { okAll = false; continue; }
 
         DWORD prev = SuspendThread(th.h);
@@ -127,6 +127,7 @@ std::optional<std::vector<ThreadState>> Freezer::importFromCSV(const std::string
     return v;
 }
 
+
 std::vector<DWORD> Freezer::enumerateThreadIds() const {
     std::vector<DWORD> tids;
     if (!process_) return tids;
@@ -183,21 +184,23 @@ bool Freezer::restore(const std::vector<ThreadState>& states) const {
     if (!process_) return false;
     bool ok = true;
 
-    // Apply properties first
     for (const auto& st : states) {
-        Handle th(openThreadHandle(st.tid, THREAD_SET_INFORMATION | THREAD_QUERY_INFORMATION));
+        Handle th(openThreadHandle(
+            st.tid, THREAD_SUSPEND_RESUME | THREAD_SET_INFORMATION | THREAD_QUERY_INFORMATION));
         if (!th) { ok = false; continue; }
+
+        // restore properties first
         if (st.groupAffinity.Mask) SetThreadGroupAffinity(th.h, &st.groupAffinity, nullptr);
         SetThreadPriority(th.h, st.dynPriority);
         SetThreadPriorityBoost(th.h, st.boostDisabled);
-    }
 
-    // Resume
-    for (const auto& st : states) {
         if (!st.weSuspended) continue;
-        Handle th(openThreadHandle(st.tid, THREAD_SUSPEND_RESUME));
-        if (!th) { ok = false; continue; }
-        if (ResumeThread(th.h) == (DWORD)-1) ok = false;
+
+        for (;;) {
+            DWORD prev = ResumeThread(th.h);
+            if (prev == DWORD(-1)) { ok = false; break; }
+            if (prev == 1) break;
+        }
     }
     return ok;
 }
